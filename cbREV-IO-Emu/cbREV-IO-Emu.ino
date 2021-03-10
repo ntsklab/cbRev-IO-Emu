@@ -30,7 +30,7 @@ void setup()
     outputString.reserve(256);
 
     pinMode(LED_BUILTIN, OUTPUT);
-    pinMode(TESTBUTTON,INPUT_PULLUP);
+    pinMode(TESTBUTTON, INPUT_PULLUP);
 }
 
 void loop()
@@ -68,10 +68,10 @@ void loop()
                         /E
                         <<ETX>>
                     */
-                    inputString = inputString.substring(inputString.indexOf("\n")+1); // /S消す
+                    inputString = inputString.substring(inputString.indexOf("\n") + 1); // /S消す
 
                     if (inputString.startsWith(":"))
-                        inputString = inputString.substring(inputString.indexOf("\n")+1); // SequenceNum消す
+                        inputString = inputString.substring(inputString.indexOf("\n") + 1); // SequenceNum消す
 
                     if (inputString.startsWith("CO:F,0"))
                     {
@@ -80,23 +80,23 @@ void loop()
                         //使い道ないのでLEDでも点滅させておく。高速で見えないけど。
                         digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
                         statusString = "CO:F,0\n";
-                        inputString = inputString.substring(inputString.indexOf("\n")+1); // ステータス消す
+                        inputString = inputString.substring(inputString.indexOf("\n") + 1); // ステータス消す
                     }
-                    else if(inputString.startsWith("CO:T,0"))
+                    else if (inputString.startsWith("CO:T,0"))
                     {
                         //テストモード
                         //同様に使いみち無いのでLEDを点灯状態にする
                         digitalWrite(LED_BUILTIN, HIGH);
                         statusString = "CO:T,0\n";
-                        inputString = inputString.substring(inputString.indexOf("\n")+1); // ステータス消す
+                        inputString = inputString.substring(inputString.indexOf("\n") + 1); // ステータス消す
                     }
 
-                    if(inputString.startsWith("AV:"))
+                    if (inputString.startsWith("AV:"))
                     {
                         //設定されているボリューム情報
                         //使いみち（ｒｙ
-                        audioVolumeString = inputString.substring(inputString.indexOf(":")+1, inputString.indexOf("\n"));
-                        inputString = inputString.substring(inputString.indexOf("\n")+1); // 音量情報消す
+                        audioVolumeString = inputString.substring(inputString.indexOf(":") + 1, inputString.indexOf("\n"));
+                        inputString = inputString.substring(inputString.indexOf("\n") + 1); // 音量情報消す
                     }
                 }
                 else
@@ -105,21 +105,21 @@ void loop()
                     //なんもしない
                 }
 
-                if(digitalRead(TESTBUTTON)==LOW)
+                if (digitalRead(TESTBUTTON) == LOW)
                 {
                     //全部1にしたらTESTになった(他のボタンは不明、ここではない？説あり。)
                     switchString = "SW:1,1,1\n";
                 }
                 else
                 {
-                  switchString = "SW:0,0,0\n";
+                    switchString = "SW:0,0,0\n";
                 }
 
                 //outputStringの組み立て
-                outputString = "/S\n:V,0210\nST:3\n";//本当はTEST入ってしばらくするとST:1になるけどまぁ・・・・大丈夫っしょ・・・
+                outputString = "/S\n:V,0210\nST:3\n"; //本当はTEST入ってしばらくするとST:1になるけどまぁ・・・・大丈夫っしょ・・・
                 outputString.concat(statusString);
                 outputString.concat(switchString);
-                outputString.concat("VO:0\nAV:");  //VO : Volume Rotary Encoder?
+                outputString.concat("VO:0\nAV:"); //VO : Volume Rotary Encoder?
                 outputString.concat(audioVolumeString);
                 outputString.concat("\n/E\n");
             }
@@ -140,7 +140,7 @@ void loop()
                 outputString = "/I\n:BOOT\r\n/E\n";
                 initCnt++;
             }
-            else if (inputString.startsWith("/v") || initCnt==1)
+            else if (inputString.startsWith("/v") || initCnt == 1)
             {
                 /*
                 CH9 Nu -> CircLink
@@ -180,10 +180,10 @@ void loop()
         }
 
         //output
-        if(outputString.length() != 0)
+        if (outputString.length() != 0)
         {
-          Serial.print(outputString);
-          Serial.write(0x3); //ETX
+            Serial.print(outputString);
+            Serial.write(0x3); //ETX
         }
         inputString = "";
         outputString = "";
@@ -197,7 +197,7 @@ void serialEvent()
     {
         uint8_t readC = Serial.read();
         inputString += (char)readC;
-        
+
         //ETX
         if (readC == 3)
             stringComplete = true;
