@@ -20,6 +20,7 @@ bool isInit = false;
 int initCnt = 0;
 
 #define TESTBUTTON 9
+#define WORKLED_328P 2
 
 void setup()
 {
@@ -30,6 +31,7 @@ void setup()
     outputString.reserve(256);
 
     pinMode(LED_BUILTIN, OUTPUT);
+    pinMode(WORKLED_328P,OUTPUT);
     pinMode(TESTBUTTON, INPUT_PULLUP);
 }
 
@@ -47,6 +49,7 @@ void loop()
                 isInit = false;
                 initCnt = 0;
                 digitalWrite(LED_BUILTIN, LOW);
+                digitalWrite(WORKLED_328P, LOW);
             }
             // /s(小文字)がInit終わったあと一発目に来る
             else if (inputString.startsWith("/s"))
@@ -79,6 +82,7 @@ void loop()
                         //本来はコインブロッカー他を動かすのに用いる？のかな？
                         //使い道ないのでLEDでも点滅させておく。高速で見えないけど。
                         digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+                        digitalWrite(WORKLED_328P, !digitalRead(WORKLED_328P));
                         statusString = "CO:F,0\n";
                         inputString = inputString.substring(inputString.indexOf("\n") + 1); // ステータス消す
                     }
@@ -87,6 +91,7 @@ void loop()
                         //テストモード
                         //同様に使いみち無いのでLEDを点灯状態にする
                         digitalWrite(LED_BUILTIN, HIGH);
+                        digitalWrite(WORKLED_328P, HIGH);
                         statusString = "CO:T,0\n";
                         inputString = inputString.substring(inputString.indexOf("\n") + 1); // ステータス消す
                     }
