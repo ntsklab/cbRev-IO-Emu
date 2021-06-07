@@ -1,0 +1,6 @@
+{
+    "board": "arduino:avr:uno",
+    "sketch": "cbREV-IO-Emu\\cbREV-IO-Emu.ino",
+    "port": "COM5",
+    "programmer": "arduino:arduinoisp"
+}
