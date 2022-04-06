@@ -16,7 +16,7 @@ String switchString = "SW:0,0,0";
 
 bool stringComplete = false;
 
-bool isInit = false;
+bool isInitialized = false;
 int initCnt = 0;
 
 #define TESTBUTTON 9
@@ -39,14 +39,14 @@ void loop()
 {
     if (stringComplete)
     {
-        if (isInit)
+        if (isInitialized)
         {
             // Initが終わっている:ゲーム起動中
 
             // PCBでリセットする取扱（例：テストを抜ける、定期4:00の再起動）をするとInitの/iが来る
             if (inputString.startsWith("/i"))
             {
-                isInit = false;
+                isInitialized = false;
                 initCnt = 0;
                 digitalWrite(LED_BUILTIN, LOW);
                 digitalWrite(WORKLED_328P, LOW);
@@ -55,8 +55,7 @@ void loop()
             else if (inputString.startsWith("/s"))
             {
                 // IO基板から通信を始める。なんか一発目は内容がちょっと違った。
-                // O:ってなに。
-                outputString = "/S\n:V,0210\nST:1\nCO:F,0\nSW:0,0,0\nO:0\n/E\n";
+                outputString = "/S\n:V,0210\nST:1\nCO:F,0\nSW:0,0,0\nVO:0\n/E\n";
             }
             else //定常通信
             {
@@ -102,44 +101,45 @@ void loop()
                         audioVolumeString = inputString.substring(inputString.indexOf(":") + 1, inputString.indexOf("\n"));
                         inputString = inputString.substring(inputString.indexOf("\n") + 1); // 音量情報消す
                     }
+
+                    if (digitalRead(TESTBUTTON) == LOW)
+                    {
+                        // 1要素目 現在押されているボタン
+                        // 2要素目 今回の通信で新たに押されたボタン
+                        // 3要素目 今回の通信で新たに離されたボタン
+                        if (switchString.startsWith("SW:1,1,0"))
+                            switchString = "SW:1,0,0\n";
+                        else
+                            switchString = "SW:1,1,0\n";
+                    }
+                    else if (switchString.startsWith("SW:1,1,0"))
+                    {
+                        switchString = "SW:0,0,1\n";
+                    }
+                    else
+                    {
+                        switchString = "SW:0,0,0\n";
+                    }
+
+                    // outputStringの組み立て
+                    outputString = "/S\n:V,0210\nST:3\n";
+                    outputString.concat(statusString);
+                    outputString.concat(switchString);
+                    outputString.concat("VO:0\nAV:"); // VO : ボリュームR/Eが動いている間1になる？
+                    outputString.concat(audioVolumeString);
+                    outputString.concat("\n/E\n");
                 }
                 else
                 {
+                    outputString = "";
                     //定常時不正・未定義データ
                     //なんもしない
                 }
-
-                if (digitalRead(TESTBUTTON) == LOW)
-                {
-                    // 1要素目 現在押されているボタン
-                    // 2要素目 今回の通信で新たに押されたボタン
-                    // 3要素目 今回の通信で新たに離されたボタン
-                    if (switchString.startsWith("SW:1,1,0"))
-                        switchString = "SW:1,0,0\n";
-                    else
-                        switchString = "SW:1,1,0\n";
-                }
-                else if (switchString.startsWith("SW:1,1,0"))
-                {
-                    switchString = "SW:0,0,1\n";
-                }
-                else
-                {
-                    switchString = "SW:0,0,0\n";
-                }
-
-                // outputStringの組み立て
-                outputString = "/S\n:V,0210\nST:3\n";
-                outputString.concat(statusString);
-                outputString.concat(switchString);
-                outputString.concat("VO:0\nAV:"); // VO : ボリュームR/Eが動いている間1になる？
-                outputString.concat(audioVolumeString);
-                outputString.concat("\n/E\n");
             }
         }
 
         // Notinit(初期)
-        if (!isInit)
+        if (!isInitialized)
         {
             // BOOT処理
             if (inputString.startsWith("/i"))
@@ -174,7 +174,7 @@ void loop()
                 */
                 outputString = "/S\n:CORE exit?\n/E\n";
                 initCnt++;
-                isInit = true;
+                isInitialized = true;
                 digitalWrite(LED_BUILTIN, HIGH);
 
                 /*
@@ -187,8 +187,9 @@ void loop()
             else if (inputString.startsWith("/S"))
             {
                 // Init失敗しとるが
-                outputString = "/S\n:BOOT\r\n/E\n";
-                isInit = true;
+                // outputString = "/S\n:BOOT\r\n/E\n";
+                outputString = "";
+                isInitialized = true;
             }
         }
 
