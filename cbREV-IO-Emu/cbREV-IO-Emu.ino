@@ -39,158 +39,150 @@ void loop()
 {
     if (stringComplete)
     {
-        if (isInitialized)
+        // BOOT処理(CORE)
+        if (inputString.startsWith("/i"))
         {
-            // Initが終わっている:ゲーム起動中
-
-            // PCBでリセットする取扱（例：テストを抜ける、定期4:00の再起動）をするとInitの/iが来る
-            if (inputString.startsWith("/i"))
-            {
-                isInitialized = false;
-                initCnt = 0;
-                digitalWrite(LED_BUILTIN, LOW);
-                digitalWrite(WORKLED_328P, LOW);
-            }
-            // /s(小文字)がInit終わったあと一発目に来る
-            else if (inputString.startsWith("/s"))
-            {
-                // IO基板から通信を始める。なんか一発目は内容がちょっと違った。
-                outputString = "/S\n:V,0210\nST:1\nCO:F,0\nSW:0,0,0\nVO:0\n/E\n";
-            }
-            else //定常通信
-            {
-                if (inputString.startsWith("/S"))
-                {
-                    /*
-                    CH9 PCB -> IO
-                        /S
-                        :314776
-                        CO:F,0
-                        AV:90,100,0,0
-                        /E
-                        <<ETX>>
-                    */
-                    inputString = inputString.substring(inputString.indexOf("\n") + 1); // /S消す
-
-                    if (inputString.startsWith(":"))
-                        inputString = inputString.substring(inputString.indexOf("\n") + 1); // SequenceNum消す
-
-                    if (inputString.startsWith("CO:F,0"))
-                    {
-                        //コインブロッカーON
-                        //使い道ないのでLEDでも点滅させておく。高速で見えないけど。
-                        digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-                        digitalWrite(WORKLED_328P, !digitalRead(WORKLED_328P));
-                        statusString = "CO:F,0\n";
-                        inputString = inputString.substring(inputString.indexOf("\n") + 1); // ステータス消す
-                    }
-                    else if (inputString.startsWith("CO:T,0"))
-                    {
-                        //コインブロッカーOFF
-                        //同様に使いみち無いのでLEDを点灯状態にする
-                        digitalWrite(LED_BUILTIN, HIGH);
-                        digitalWrite(WORKLED_328P, HIGH);
-                        statusString = "CO:T,0\n";
-                        inputString = inputString.substring(inputString.indexOf("\n") + 1); // ステータス消す
-                    }
-
-                    if (inputString.startsWith("AV:"))
-                    {
-                        //設定されているボリューム情報
-                        //使いみち（ｒｙ
-                        audioVolumeString = inputString.substring(inputString.indexOf(":") + 1, inputString.indexOf("\n"));
-                        inputString = inputString.substring(inputString.indexOf("\n") + 1); // 音量情報消す
-                    }
-
-                    if (digitalRead(TESTBUTTON) == LOW)
-                    {
-                        // 1要素目 現在押されているボタン
-                        // 2要素目 今回の通信で新たに押されたボタン
-                        // 3要素目 今回の通信で新たに離されたボタン
-                        if (switchString.startsWith("SW:1,1,0"))
-                            switchString = "SW:1,0,0\n";
-                        else
-                            switchString = "SW:1,1,0\n";
-                    }
-                    else if (switchString.startsWith("SW:1,1,0"))
-                    {
-                        switchString = "SW:0,0,1\n";
-                    }
-                    else
-                    {
-                        switchString = "SW:0,0,0\n";
-                    }
-
-                    // outputStringの組み立て
-                    outputString = "/S\n:V,0210\nST:3\n";
-                    outputString.concat(statusString);
-                    outputString.concat(switchString);
-                    outputString.concat("VO:0\nAV:"); // VO : ボリュームR/Eが動いている間1になる？
-                    outputString.concat(audioVolumeString);
-                    outputString.concat("\n/E\n");
-                }
-                else
-                {
-                    outputString = "";
-                    //定常時不正・未定義データ
-                    //なんもしない
-                }
-            }
+            /*
+            CH9 PCB -> IO
+                /i\n
+                /e\n
+                <<ETX>>
+            */
+            outputString = "/I\n:BOOT\r\n/E\n";
+            isInitialized = false;
+            inputString = "";
         }
 
-        // Notinit(初期)
-        if (!isInitialized)
+        // Version情報
+        if (inputString.startsWith("/v"))
         {
-            // BOOT処理
-            if (inputString.startsWith("/i"))
-            {
-                /*
-                CH9 PCB -> IO
-                    /i\n
-                    /e\n
-                    <<ETX>>
-                */
-                outputString = "/I\n:BOOT\r\n/E\n";
-                initCnt++;
-            }
-            else if (inputString.startsWith("/v") || initCnt == 1)
-            {
-                /*
-                CH9 PCB -> IO
-                    /v\n
-                    /e\n
-                    <<ETX>>
-                */
-                outputString = "/I\nC:REVIO NTKLAB LOGICBD 2021/03/28\nV:REVIO NTKLB IMITATOR 2021/03/11\nF:S,?,0,0,0,00\n/E\n";
-                initCnt++;
-            }
-            else if (inputString.startsWith("/s"))
-            {
-                /*
-                CH9 PCB -> IO
-                    /s\n
-                    /e\n
-                    <<ETX>>
-                */
-                outputString = "/S\n:CORE exit?\n/E\n";
-                initCnt++;
-                isInitialized = true;
-                digitalWrite(LED_BUILTIN, HIGH);
+            /*
+            CH9 PCB -> IO
+                /v\n
+                /e\n
+                <<ETX>>
+            */
+            outputString = "/I\nC:REVIO NTKLAB LOGICBD 2021/03/28\nV:REVIO NTKLB IMITATOR 2021/03/11\nF:S,?,0,0,0,00\n/E\n";
+            isInitialized = false;
+            inputString = "";
+        }
 
-                /*
-                CH9 PCB -> IO
-                    /s\n
-                    /e\n
-                    <<ETX>>
-                */
-            }
-            else if (inputString.startsWith("/S"))
+        // CORE抜ける
+        if (inputString.startsWith("/s") && !isInitialized)
+        {
+            /*
+            CH9 PCB -> IO
+                /s\n
+                /e\n
+                <<ETX>>
+            */
+            outputString = "/S\n:CORE exit?\n/E\n";
+            inputString = "";
+            isInitialized = true;
+            digitalWrite(LED_BUILTIN, HIGH);
+
+            /*
+            CH9 PCB -> IO
+                /s\n
+                /e\n
+                <<ETX>>
+            */
+        }
+
+        // CORE抜けたあとの/s
+        if (inputString.startsWith("/s") && isInitialized)
+        {
+            // IO基板から通信を始める。なんか一発目は内容がちょっと違った。
+            outputString = "/S\n:V,0210\nST:1\nCO:F,0\nSW:0,0,0\nVO:0\n/E\n";
+            inputString = "";
+        }
+
+        // ゲーム起動中
+        if (inputString.startsWith("/S"))
+        {
+            /*
+            CH9 PCB -> IO
+                /S
+                :314776
+                CO:F,0
+                AV:90,100,0,0
+                /E
+                <<ETX>>
+            */
+            isInitialized = true;
+            inputString = inputString.substring(inputString.indexOf("\n") + 1); // /S消す
+
+            if (inputString.startsWith(":"))
+                inputString = inputString.substring(inputString.indexOf("\n") + 1); // SequenceNum消す
+
+            if (inputString.startsWith("CO:F,0"))
             {
-                // Init失敗しとるが
-                // outputString = "/S\n:BOOT\r\n/E\n";
-                outputString = "";
-                isInitialized = true;
+                //コインブロッカーON
+                //使い道ないのでLEDでも点滅させておく。高速で見えないけど。
+                digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+                digitalWrite(WORKLED_328P, !digitalRead(WORKLED_328P));
+                statusString = "CO:F,0\n";
+                inputString = inputString.substring(inputString.indexOf("\n") + 1); // ステータス消す
             }
+            else if (inputString.startsWith("CO:T,0"))
+            {
+                //コインブロッカーOFF
+                //同様に使いみち無いのでLEDを点灯状態にする
+                digitalWrite(LED_BUILTIN, HIGH);
+                digitalWrite(WORKLED_328P, HIGH);
+                statusString = "CO:T,0\n";
+                inputString = inputString.substring(inputString.indexOf("\n") + 1); // ステータス消す
+            }
+
+            if (inputString.startsWith("AV:"))
+            {
+                //設定されているボリューム情報
+                //使いみち（ｒｙ
+                audioVolumeString = inputString.substring(inputString.indexOf(":") + 1, inputString.indexOf("\n"));
+                inputString = inputString.substring(inputString.indexOf("\n") + 1); // 音量情報消す
+            }
+
+            /*
+                SWパラメータのビット(9ビット)
+                1   1   1   1   1   1   1   1   1
+                                                TEST(1)
+                                            DOWN(2)
+                                        CANCEL(4)
+                                    UP(8)
+                                SERVICE(16)
+                            N/A?
+                        N/A?
+                    N/A?
+                HeadPhone Detect(256)
+            */
+            if (digitalRead(TESTBUTTON) == LOW)
+            {
+                // 1要素目 現在押されているボタン
+                // 2要素目 今回の通信で新たに押されたボタン
+                // 3要素目 今回の通信で新たに離されたボタン
+                if (switchString.startsWith("SW:1,1,0"))
+                    switchString = "SW:1,0,0\n";
+                else
+                    switchString = "SW:1,1,0\n";
+            }
+            else if (switchString.startsWith("SW:1,"))
+            {
+                switchString = "SW:0,0,1\n";
+            }
+            else
+            {
+                switchString = "SW:0,0,0\n";
+            }
+
+            inputString = "";
+
+            // outputStringの組み立て
+            outputString = "/S\n:V,0210\nST:3\n";
+            outputString.concat(statusString);
+            outputString.concat(switchString);
+            outputString.concat("VO:0\nAV:"); // VO : ボリュームR/Eが動いている間1になる？
+            outputString.concat(audioVolumeString);
+            outputString.concat("\n/E\n");
         }
 
         // output
