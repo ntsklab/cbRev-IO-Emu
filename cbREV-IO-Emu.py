@@ -2,6 +2,7 @@
 # Original: Arduino Nano version
 # 2021/03/11 NTSK-lab. Pray Tohoku.
 # 2022/4/7 Update
+# 2026/2/18 Update - Port to MicroPython on RP2040 (Raspberry Pi Pico)
 
 from machine import UART, Pin
 import time
