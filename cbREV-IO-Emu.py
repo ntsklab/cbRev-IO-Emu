@@ -87,8 +87,18 @@ class ResponseBuilder:
 class RevIoEmulator:
     def __init__(self):
         # UART初期化（基板とのシリアル通信用）
-        self.uart = UART(UART_ID, UART_BAUD)
-        self.uart.init(tx=Pin(UART_TX, Pin.OUT), rx=Pin(UART_RX, Pin.IN))
+        # rp2 port では baudrate/tx/rx をまとめて渡すのが正しい流儀。
+        # Pin には Pin.OUT/Pin.IN を付けず、番号だけ渡す（UARTペリフェラルが機能を制御するため）。
+        # 送信1フレームを取りこぼさないよう rxbuf を拡張し、短いタイムアウトを設定する。
+        self.uart = UART(
+            UART_ID,
+            baudrate=UART_BAUD,
+            tx=Pin(UART_TX),
+            rx=Pin(UART_RX),
+            rxbuf=512,
+            timeout=10,
+            timeout_char=2,
+        )
 
         # 入出力ピン初期化
         self.led = Pin(BUILTIN_LED, Pin.OUT)
@@ -131,6 +141,11 @@ class RevIoEmulator:
         now_ms = time.ticks_ms()
         elapsed_ms = time.ticks_diff(now_ms, self._debug_window_start_ms)
         if elapsed_ms < self._debug_window_ms:
+            return
+        if elapsed_ms <= 0:
+            # 不整合（ticks巻き戻し等）はウィンドウをリセットして安全に抜ける
+            self._debug_window_start_ms = now_ms
+            self._debug_window_frame_count = 0
             return
 
         frame_per_sec = (self._debug_window_frame_count * 1000.0) / elapsed_ms
