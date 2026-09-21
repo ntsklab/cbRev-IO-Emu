@@ -15,8 +15,12 @@ UART1:
   ボーレート: 115200 bps
 
 GPIO:
-  内蔵LED: GPIO25
-  TESTボタン: GPIO22
+  内蔵LED: GPIO25 (RXアクティビティ表示)
+  TESTボタン: GPIO22 (SW bit0=1, active-low)
+  SERVICEボタン: GPIO21 (SW bit4=16, active-low)
+  UPボタン: GPIO20 (SW bit3=8, active-low)
+  DOWNボタン: GPIO19 (SW bit1=2, active-low)
+  CANCELボタン: GPIO18 (SW bit2=4, active-low)
 ```
 
 ## お問い合わせ
