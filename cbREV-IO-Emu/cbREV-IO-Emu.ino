@@ -160,7 +160,7 @@ void loop()
                 // 1要素目 現在押されているボタン
                 // 2要素目 今回の通信で新たに押されたボタン
                 // 3要素目 今回の通信で新たに離されたボタン
-                if (switchString.startsWith("SW:1,1,0"))
+                if (switchString.startsWith("SW:1,"))
                     switchString = "SW:1,0,0\n";
                 else
                     switchString = "SW:1,1,0\n";
