@@ -4,7 +4,7 @@
 
 ## ファイル構成
 
-- `cbREV-IO-Emu.py` - RP2040（Raspberry Pi Pico）版
+- `cbREV-IO-Emu.py` - Raspberry Pi Pico / Pico 2（RP2040/RP2350）版
 
 ## ピン配置
 

@@ -1,8 +1,8 @@
-# REV MAIN IO Imitator - MicroPython version for RP2040
+# REV MAIN IO Imitator - MicroPython version for Raspberry Pi Pico (RP2040/RP2350)
 # Original: Arduino Nano version (cbREV-IO-Emu/cbREV-IO-Emu.ino on main branch)
 # 2021/03/11 NTSK-lab. Pray Tohoku.
 # 2022/4/7 Update
-# 2026/2/18 Update - Port to MicroPython on RP2040 (Raspberry Pi Pico)
+# 2026/2/18 Update - Port to MicroPython (Raspberry Pi Pico / Pico 2)
 #
 # Porting policy:
 # - Protocol behavior follows the Arduino working code (single-frame
@@ -337,7 +337,7 @@ class RevIoEmulator:
 
 def main():
     emulator = RevIoEmulator()
-    print("REV IO Imitator started on RP2040")
+    print("REV IO Imitator started")
 
     while True:
         did_work = emulator.poll()
